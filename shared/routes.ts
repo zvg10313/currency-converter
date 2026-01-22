@@ -1,0 +1,52 @@
+import { z } from "zod";
+import { insertConversionSchema, conversions } from "./schema";
+
+export const errorSchemas = {
+  validation: z.object({
+    message: z.string(),
+    field: z.string().optional(),
+  }),
+  internal: z.object({
+    message: z.string(),
+  }),
+};
+
+export const api = {
+  conversions: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/conversions/:sessionId',
+      responses: {
+        200: z.array(z.custom<typeof conversions.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/conversions',
+      input: insertConversionSchema,
+      responses: {
+        201: z.custom<typeof conversions.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    clear: {
+      method: 'DELETE' as const,
+      path: '/api/conversions/:sessionId',
+      responses: {
+        204: z.void(),
+      },
+    },
+  },
+};
+
+export function buildUrl(path: string, params?: Record<string, string | number>): string {
+  let url = path;
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (url.includes(`:${key}`)) {
+        url = url.replace(`:${key}`, String(value));
+      }
+    });
+  }
+  return url;
+}
