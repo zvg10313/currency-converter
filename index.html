@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字转中文大写金额</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --background: 0 0% 98%;
+      --foreground: 222 47% 11%;
+      --primary: 346 84% 45%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 43 96% 56%;
+      --muted: 210 20% 96%;
+      --muted-foreground: 215 16% 47%;
+      --border: 214 32% 91%;
+      --input: 214 32% 91%;
+      --radius: 0.75rem;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #fafafa 0%, #fef2f2 100%);
+      color: hsl(var(--foreground));
+      min-height: 100vh;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .header h1 {
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .header h1 span {
+      color: hsl(var(--primary));
+    }
+
+    .header p {
+      color: hsl(var(--muted-foreground));
+      font-size: clamp(0.875rem, 2vw, 1rem);
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 1024px) {
+      .main-content {
+        grid-template-columns: 1.5fr 1fr;
+      }
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      border: 1px solid hsl(var(--border));
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .card-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-header h2::before {
+      content: '';
+      width: 0.25rem;
+      height: 1.25rem;
+      background: hsl(var(--primary));
+      border-radius: 9999px;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.5rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 1.5rem;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-family: 'Inter', monospace;
+      font-weight: 300;
+      border: 2px solid hsl(var(--input));
+      border-radius: var(--radius);
+      background: #f8fafc;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .input-wrapper input:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    .divider {
+      position: relative;
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: hsl(var(--border));
+    }
+
+    .divider span {
+      position: relative;
+      background: white;
+      padding: 0 1rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .result-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-header label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .copy-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .copy-btn:hover:not(:disabled) {
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+    }
+
+    .copy-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .copy-btn.copied {
+      background: #f0fdf4;
+      border-color: #86efac;
+      color: #16a34a;
+    }
+
+    .result-box {
+      min-height: 160px;
+      padding: 1.5rem;
+      border: 2px dashed hsl(var(--border));
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: #f8fafc;
+      transition: all 0.3s;
+    }
+
+    .result-box.has-result {
+      background: rgba(220, 38, 38, 0.02);
+      border-color: rgba(220, 38, 38, 0.2);
+      border-style: solid;
+    }
+
+    .result-text {
+      font-family: 'Noto Serif SC', serif;
+      font-size: clamp(1.25rem, 4vw, 2rem);
+      font-weight: 500;
+      color: hsl(var(--primary));
+      word-break: break-all;
+    }
+
+    .result-placeholder {
+      color: hsl(var(--muted-foreground));
+      opacity: 0.4;
+    }
+
+    .result-placeholder .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .reference-section {
+      margin-top: 2rem;
+    }
+
+    .reference-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.75rem;
+    }
+
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .reference-grid {
+        grid-template-columns: repeat(10, 1fr);
+      }
+    }
+
+    .reference-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      background: white;
+      border: 1px solid hsl(var(--border));
+      transition: all 0.2s;
+    }
+
+    .reference-item:hover {
+      border-color: hsl(var(--primary));
+    }
+
+    .reference-item .chinese {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+
+    .reference-item .arabic {
+      font-family: 'Inter', monospace;
+      font-size: 0.625rem;
+      color: hsl(var(--muted-foreground));
+      margin-top: 0.25rem;
+    }
+
+    .unit-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+    }
+
+    .unit-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      background: rgba(220, 38, 38, 0.05);
+      border: 1px solid rgba(220, 38, 38, 0.1);
+    }
+
+    .unit-item .chinese {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: hsl(var(--primary));
+    }
+
+    .unit-item .arabic {
+      font-family: 'Inter', monospace;
+      font-size: 0.625rem;
+      color: hsl(var(--primary));
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+
+    .error-message {
+      display: none;
+      padding: 0.75rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: var(--radius);
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>数字<span>转换器</span></h1>
+      <p>即时将阿拉伯数字转换为财务专用的中文大写金额</p>
+    </header>
+
+    <div class="main-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>金额转换</h2>
+        </div>
+        <div class="card-content">
+          <div class="input-group">
+            <label for="amount">输入金额 (¥)</label>
+            <div class="input-wrapper">
+              <input 
+                type="text" 
+                id="amount" 
+                inputmode="decimal"
+                placeholder="例如: 1234.56"
+                autocomplete="off"
+              >
+            </div>
+            <div class="error-message" id="error-message">
+              请提供有效金额，且小数点后最多保留两位（角、分）。
+            </div>
+          </div>
+
+          <div class="divider">
+            <span>转换为中文大写</span>
+          </div>
+
+          <div class="result-group">
+            <div class="result-header">
+              <label>转换结果</label>
+              <button class="copy-btn" id="copy-btn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span id="copy-text">复制结果</span>
+              </button>
+            </div>
+            <div class="result-box" id="result-box">
+              <div class="result-placeholder">
+                <div class="icon">零</div>
+                <div>转换结果将显示在此处</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reference-section">
+        <div class="card-header">
+          <h2>快速参考</h2>
+        </div>
+        <div class="card-content">
+          <div class="reference-title">数字</div>
+          <div class="reference-grid" id="numerals-grid"></div>
+
+          <div class="reference-title">单位</div>
+          <div class="unit-grid" id="units-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const numerals = [
+      { arabic: "0", chinese: "零" },
+      { arabic: "1", chinese: "壹" },
+      { arabic: "2", chinese: "贰" },
+      { arabic: "3", chinese: "叁" },
+      { arabic: "4", chinese: "肆" },
+      { arabic: "5", chinese: "伍" },
+      { arabic: "6", chinese: "陆" },
+      { arabic: "7", chinese: "柒" },
+      { arabic: "8", chinese: "捌" },
+      { arabic: "9", chinese: "玖" },
+    ];
+
+    const units = [
+      { arabic: "10", chinese: "拾" },
+      { arabic: "100", chinese: "佰" },
+      { arabic: "1K", chinese: "仟" },
+      { arabic: "10K", chinese: "万" },
+      { arabic: "100M", chinese: "亿" },
+    ];
+
+    function digitToChineseCurrency(n) {
+      const fraction = ['角', '分'];
+      const digit = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
+      const unit = [
+        ['元', '万', '亿'],
+        ['', '拾', '佰', '仟'],
+      ];
+
+      const head = n < 0 ? '欠' : '';
+      n = Math.abs(n);
+
+      let s = '';
+
+      for (let i = 0; i < fraction.length; i++) {
+        s += (
+          digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] + fraction[i]
+        ).replace(/零./, '');
+      }
+      s = s || '整';
+
+      n = Math.floor(n);
+
+      for (let i = 0; i < unit[0].length && n > 0; i++) {
+        let p = '';
+        for (let j = 0; j < unit[1].length && n > 0; j++) {
+          p = digit[n % 10] + unit[1][j] + p;
+          n = Math.floor(n / 10);
+        }
+        s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
+      }
+
+      return (
+        head +
+        s
+          .replace(/(零.)*零元/, '元')
+          .replace(/(零.)+/g, '零')
+          .replace(/^整$/, '零元整')
+      );
+    }
+
+    function validateNumber(val) {
+      return /^\d+(\.\d{1,2})?$/.test(val) && parseFloat(val) >= 0;
+    }
+
+    function initReferenceGrids() {
+      const numeralsGrid = document.getElementById('numerals-grid');
+      const unitsGrid = document.getElementById('units-grid');
+
+      numerals.forEach(num => {
+        const item = document.createElement('div');
+        item.className = 'reference-item';
+        item.innerHTML = `
+          <span class="chinese">${num.chinese}</span>
+          <span class="arabic">${num.arabic}</span>
+        `;
+        numeralsGrid.appendChild(item);
+      });
+
+      units.forEach(u => {
+        const item = document.createElement('div');
+        item.className = 'unit-item';
+        item.innerHTML = `
+          <span class="chinese">${u.chinese}</span>
+          <span class="arabic">${u.arabic}</span>
+        `;
+        unitsGrid.appendChild(item);
+      });
+    }
+
+    function handleInput(e) {
+      const val = e.target.value;
+      const resultBox = document.getElementById('result-box');
+      const copyBtn = document.getElementById('copy-btn');
+      const copyText = document.getElementById('copy-text');
+      const errorMessage = document.getElementById('error-message');
+
+      if (!/^\d*\.?\d*$/.test(val)) {
+        e.target.value = val.slice(0, -1);
+        return;
+      }
+
+      if (val) {
+        if (validateNumber(val)) {
+          errorMessage.classList.remove('show');
+          const converted = digitToChineseCurrency(parseFloat(val));
+          resultBox.innerHTML = `<div class="result-text">${converted}</div>`;
+          resultBox.classList.add('has-result');
+          copyBtn.disabled = false;
+        } else {
+          resultBox.innerHTML = `
+            <div class="result-placeholder">
+              <div class="icon">零</div>
+              <div>转换结果将显示在此处</div>
+            </div>
+          `;
+          resultBox.classList.remove('has-result');
+          copyBtn.disabled = true;
+
+          if (/\.\d{3,}/.test(val)) {
+            errorMessage.classList.add('show');
+          } else {
+            errorMessage.classList.remove('show');
+          }
+        }
+      } else {
+        resultBox.innerHTML = `
+          <div class="result-placeholder">
+            <div class="icon">零</div>
+            <div>转换结果将显示在此处</div>
+          </div>
+        `;
+        resultBox.classList.remove('has-result');
+        copyBtn.disabled = true;
+        errorMessage.classList.remove('show');
+      }
+    }
+
+    async function handleCopy() {
+      const resultBox = document.getElementById('result-box');
+      const copyBtn = document.getElementById('copy-btn');
+      const copyText = document.getElementById('copy-text');
+      const resultText = resultBox.querySelector('.result-text');
+
+      if (!resultText) return;
+
+      try {
+        await navigator.clipboard.writeText(resultText.textContent);
+        copyBtn.classList.add('copied');
+        copyText.textContent = '已复制';
+        
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyText.textContent = '复制结果';
+        }, 2000);
+      } catch (err) {
+        alert('复制失败，请手动复制');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initReferenceGrids();
+      
+      const amountInput = document.getElementById('amount');
+      const copyBtn = document.getElementById('copy-btn');
+
+      amountInput.addEventListener('input', handleInput);
+      copyBtn.addEventListener('click', handleCopy);
+    });
+  </script>
+</body>
+</html>
