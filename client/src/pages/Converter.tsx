@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { digitToChineseCurrency, validateNumber } from "@/lib/currency-converter";
-import { useCreateConversion } from "@/hooks/use-conversions";
+import { useCreateLocalConversion } from "@/hooks/use-local-conversions";
 import { ReferenceGrid } from "@/components/ReferenceGrid";
 import { ConversionHistory } from "@/components/ConversionHistory";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ export default function Converter() {
   const [amount, setAmount] = useState<string>("");
   const [result, setResult] = useState<string>("");
   const [copied, setCopied] = useState(false);
-  const { mutate: createConversion } = useCreateConversion();
+  const { mutate: createConversion } = useCreateLocalConversion();
   const { toast } = useToast();
   
   // Debounce ref for saving history
@@ -50,7 +50,7 @@ export default function Converter() {
         
         saveTimeoutRef.current = setTimeout(() => {
           if (sessionId && val && converted) {
-            createConversion({ sessionId, amount: val, result: converted });
+            createConversion(sessionId, val, converted);
           }
         }, 1500); // Save after 1.5s of inactivity
       } else {

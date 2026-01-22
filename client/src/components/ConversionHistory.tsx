@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, History, Copy, Check } from "lucide-react";
-import { useConversions, useClearHistory } from "@/hooks/use-conversions";
+import { useLocalConversions, useClearLocalHistory } from "@/hooks/use-local-conversions";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -13,8 +13,8 @@ interface ConversionHistoryProps {
 }
 
 export function ConversionHistory({ sessionId }: ConversionHistoryProps) {
-  const { data: history, isLoading } = useConversions(sessionId);
-  const { mutate: clearHistory, isPending: isClearing } = useClearHistory();
+  const { data: history, isLoading } = useLocalConversions(sessionId);
+  const { mutate: clearHistory } = useClearLocalHistory();
   const { toast } = useToast();
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
@@ -60,7 +60,6 @@ export function ConversionHistory({ sessionId }: ConversionHistoryProps) {
             variant="ghost" 
             size="sm" 
             onClick={handleClear}
-            disabled={isClearing}
             className="h-8 px-2 text-muted-foreground hover:text-destructive transition-colors"
           >
             <Trash2 className="h-4 w-4 mr-1.5" />
